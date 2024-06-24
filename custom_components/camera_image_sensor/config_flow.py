@@ -16,17 +16,28 @@ class CameraImageSensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Starting async_step_user with user_input: %s", user_input)
         errors = {}
         if user_input is not None:
-            _LOGGER.debug("Creating entry with user_input: %s", user_input)
-            return self.async_create_entry(title="Camera Image Sensor", data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("camera_entity"): EntitySelector(EntitySelectorConfig(domain="camera")),
+            try:
+                _LOGGER.debug("Creating entry with user_input: %s", user_input)
+                return self.async_create_entry(title="Camera Image Sensor", data=user_input)
+            except Exception as e:
+                _LOGGER.error("Error creating entry: %s", e)
+                errors["base"] = "unknown"
+        
+        try:
+            data_schema = vol.Schema({
+                vol.Required("camera_entity"): vol.All(
+                    str, cv.entity_domain('camera')
+                ),
                 vol.Optional("scan_interval", default="00:01:00"): cv.time_period_str
-            }),
-            errors=errors
-        )
+            })
+            return self.async_show_form(
+                step_id="user",
+                data_schema=data_schema,
+                errors=errors
+            )
+        except Exception as e:
+            _LOGGER.error("Error showing form: %s", e)
+            return self.async_abort(reason="unknown_error")
 
     @staticmethod
     @callback
@@ -41,12 +52,20 @@ class CameraImageSensorOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         _LOGGER.debug("Starting async_step_init with user_input: %s", user_input)
         if user_input is not None:
-            _LOGGER.debug("Creating entry with user_input: %s", user_input)
-            return self.async_create_entry(title="", data=user_input)
+            try:
+                _LOGGER.debug("Creating entry with user_input: %s", user_input)
+                return self.async_create_entry(title="", data=user_input)
+            except Exception as e:
+                _LOGGER.error("Error creating entry: %s", e)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({
+        try:
+            data_schema = vol.Schema({
                 vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", "00:01:00")): cv.time_period_str
             })
-        )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=data_schema
+            )
+        except Exception as e:
+            _LOGGER.error("Error showing form: %s", e)
+            return self.async_abort(reason="unknown_error")
