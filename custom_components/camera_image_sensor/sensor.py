@@ -4,45 +4,41 @@ from PIL import Image
 from io import BytesIO
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
     DataUpdateCoordinator,
+    CoordinatorEntity,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = 60
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    camera_entity = entry.data["camera_entity"]
-    scan_interval = entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
-    
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info=None,
+) -> None:
+    camera_entity = config["camera_entity"]
+    scan_interval = config.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+
     coordinator = ImageAnalysisCoordinator(hass, camera_entity, scan_interval)
     await coordinator.async_refresh()
 
     sensor = CameraImageSensor(coordinator, camera_entity)
     async_add_entities([sensor], True)
 
-    # Add a service to trigger the analysis manually
-    platform = EntityComponent(_LOGGER, "sensor", hass)
-    platform.async_register_entity_service(
-        "trigger_analysis",
-        {},
-        "async_trigger_analysis",
-    )
-
     async def handle_trigger_service(call):
         await sensor.async_trigger_analysis()
 
-    hass.services.async_register(DOMAIN, "trigger_analysis", handle_trigger_service)
+    hass.services.async_register("camera_image_sensor", "trigger_analysis", handle_trigger_service)
 
 class ImageAnalysisCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, camera_entity, scan_interval):
         self.camera_entity = camera_entity
-        self.scan_interval = timedelta(seconds=scan_interval) if scan_interval > 0 else None
+        self.scan_interval = timedelta(seconds=scan_interval.total_seconds()) if scan_interval.total_seconds() > 0 else None
         super().__init__(hass, _LOGGER, name="Camera Image Sensor", update_interval=self.scan_interval)
 
     async def _async_update_data(self):
