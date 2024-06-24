@@ -1,7 +1,6 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 import homeassistant.helpers.config_validation as cv
 import logging
 
@@ -25,10 +24,8 @@ class CameraImageSensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         try:
             data_schema = vol.Schema({
-                vol.Required("camera_entity"): vol.All(
-                    str, cv.entity_domain('camera')
-                ),
-                vol.Optional("scan_interval", default="00:01:00"): cv.time_period_str
+                vol.Required("camera_entity"): cv.entity_domain('camera'),
+                vol.Optional("scan_interval", default=60): cv.positive_int
             })
             return self.async_show_form(
                 step_id="user",
@@ -60,7 +57,7 @@ class CameraImageSensorOptionsFlowHandler(config_entries.OptionsFlow):
 
         try:
             data_schema = vol.Schema({
-                vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", "00:01:00")): cv.time_period_str
+                vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", 60)): cv.positive_int
             })
             return self.async_show_form(
                 step_id="init",

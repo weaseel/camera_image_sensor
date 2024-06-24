@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = 60
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     camera_entity = entry.data["camera_entity"]
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class ImageAnalysisCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, camera_entity, scan_interval):
         self.camera_entity = camera_entity
-        self.scan_interval = scan_interval if scan_interval > timedelta(0) else None
+        self.scan_interval = timedelta(seconds=scan_interval) if scan_interval > 0 else None
         super().__init__(hass, _LOGGER, name="Camera Image Sensor", update_interval=self.scan_interval)
 
     async def _async_update_data(self):
