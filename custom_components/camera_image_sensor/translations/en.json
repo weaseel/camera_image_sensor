@@ -3,9 +3,10 @@
     "step": {
       "user": {
         "title": "Set up Camera Image Sensor",
-        "description": "Select the camera entity to monitor.",
+        "description": "Select the camera entity to monitor and set the update interval.",
         "data": {
-          "camera_entity": "Camera Entity"
+          "camera_entity": "Camera Entity",
+          "scan_interval": "Update Interval (HH:MM:SS)"
         }
       }
     },

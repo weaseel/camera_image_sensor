@@ -7,6 +7,7 @@ from . import DOMAIN
 
 class CameraImageSensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
+        errors = {}
         if user_input is not None:
             return self.async_create_entry(title="Camera Image Sensor", data=user_input)
 
@@ -14,7 +15,9 @@ class CameraImageSensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 "camera_entity": EntitySelector(EntitySelectorConfig(domain="camera")),
-            })
+                vol.Optional("scan_interval", default="00:01:00"): cv.time_period
+            }),
+            errors=errors
         )
 
     @staticmethod

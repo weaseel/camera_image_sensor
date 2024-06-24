@@ -5,10 +5,12 @@ from io import BytesIO
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,10 +19,25 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     camera_entity = entry.data["camera_entity"]
     scan_interval = entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+    
     coordinator = ImageAnalysisCoordinator(hass, camera_entity, scan_interval)
     await coordinator.async_refresh()
 
-    async_add_entities([CameraImageSensor(coordinator, camera_entity)])
+    sensor = CameraImageSensor(coordinator, camera_entity)
+    async_add_entities([sensor], True)
+
+    # Add a service to trigger the analysis manually
+    platform = EntityComponent(_LOGGER, "sensor", hass)
+    platform.async_register_entity_service(
+        "trigger_analysis",
+        {},
+        "async_trigger_analysis",
+    )
+
+    async def handle_trigger_service(call):
+        await sensor.async_trigger_analysis()
+
+    hass.services.async_register(DOMAIN, "trigger_analysis", handle_trigger_service)
 
 class ImageAnalysisCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, camera_entity, scan_interval):
@@ -51,10 +68,6 @@ class CameraImageSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         return self.coordinator.data
-
-    async def async_set_scan_interval(self, scan_interval):
-        self.coordinator.update_interval = scan_interval if scan_interval > timedelta(0) else None
-        await self.coordinator.async_refresh()
 
     async def async_trigger_analysis(self):
         await self.coordinator.async_request_refresh()
