@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Camera Image Sensor",
+        "description": "Select the camera entity to monitor.",
+        "data": {
+          "camera_entity": "Camera Entity"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "This camera is already configured."
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Camera Image Sensor Options",
+        "description": "Adjust the update interval or disable periodic updates.",
+        "data": {
+          "scan_interval": "Update Interval (HH:MM:SS)"
+        }
+      }
+    }
+  }
+}
