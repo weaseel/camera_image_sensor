@@ -2,6 +2,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
+import homeassistant.helpers.config_validation as cv  # Make sure this import is here
 
 from . import DOMAIN
 

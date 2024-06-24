@@ -1,9 +1,9 @@
 {
   "domain": "camera_image_sensor",
   "name": "Camera Image Sensor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "requirements": ["pillow"],
   "dependencies": ["camera"],
   "config_flow": true,
-  "codeowners": ["@weaseel"]
+  "codeowners": ["@yweaseel"]
 }
